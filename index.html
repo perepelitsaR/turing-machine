@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body{
+            background-color: black;
+            color: wheat;
+        }
+        .container{
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .transition-input{
+            width: 20px;
+        }
+
+        .transition-line{
+            margin-top: 10px;
+        }
+
+        .memory-input{
+            margin-top: 10px;
+        }
+
+        .button{
+            margin: 10px;
+            border-radius: 5px;
+            display: block;
+        }
+
+        .turing-memory{
+            position: relative;
+        }
+
+        .memory-block-container{
+            margin-top: 40px;
+            display: flex;
+        }
+
+        .memory-block{
+            border: 1px solid wheat;
+            width: 20px;
+            height: 20px;
+            text-align: center;
+        }
+        .manipulator{
+	        width: 0;
+	        height: 0;
+	        border-left: 12px solid transparent;
+	        border-right: 12px solid transparent;
+	        border-top: 24px solid green;
+
+            position: absolute;
+            top: -24px;
+            left: 20px;
+        }
+        .manipulator-state{
+            position: relative;
+            bottom: 24px;
+            right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Welcome to Turing Machine Simulator!</h1>
+        <p>Command format: Q q0 Char c0 -> Q q1 Char c1 Direction d where q0,q1 - number of state; c0 - input character, c1 - output character, d={L,R,S}</p>
+        <p>Initial state number is 1, finish state -1</p>
+        <form class="command-form" action="#">
+            <div class="transition-line">
+                <span>Q</span>
+                <input name="state0" class="transition-input state0" type="text" maxlength="3" />
+                <span>Char</span>
+                <input name="char0" class="transition-input char0" type="text" maxlength="1" />
+                <span>-></span>
+                <span>Q</span>
+                <input name="state1" class="transition-input state1" type="text" maxlength="3" />
+                <span>Char</span>
+                <input name="char1" class="transition-input char1" type="text" maxlength="1" />
+                <span>Direction</span>
+                <input name="direction1" class="transition-input direction1" type="text" maxlength="1" />
+            </div>
+            <button class="button add-button">Add line</button>
+            <p>Memory: </p> <textarea class="memory-input" placeholder="1,0,1,1"></textarea>
+            <br />
+            <button class="button run-button">Run</button>
+            <button class="button load-button">Load</button>
+        </form>
+
+        <div class="turing-memory">
+            
+            <div class="manipulator">
+                <div class="manipulator-state">
+                    5
+                </div>
+            </div>
+            <div class="memory-block-container">
+                <div class="memory-block">
+                    1
+                </div>
+                <div class="memory-block">
+                    0
+                </div>
+                <div class="memory-block">
+                    1
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        "use strict;"
+
+        let addButton = document.querySelector("button.add-button");
+        addButton.onclick = function () {
+            let transitionLines = document.querySelectorAll(".transition-line");
+            let lastTransitionLine = transitionLines[transitionLines.length - 1];
+            let transitionCopy =lastTransitionLine.cloneNode(true);
+            let inputs = transitionCopy.querySelectorAll(".transition-input");
+            inputs.forEach((element) => {
+                element.value = '';
+            });
+            let parent = document.querySelector(".command-form");
+            let nextChild = parent.querySelector(".addButton");
+            parent.insertBefore(transitionCopy, lastTransitionLine.nextSibling);
+            return false;
+        };
+
+        let loadButton = document.querySelector("button.load-button");
+        loadButton.onclick = function () {
+            let memory = document.querySelector(".memory-input").value.split(",");
+            let memoryContainer = document.querySelector(".memory-block-container");
+            let oldBlocks = memoryContainer.querySelectorAll(".memory-block");
+            for (let i = 0; i < oldBlocks.length; i++) {
+                memoryContainer.removeChild(oldBlocks[i]);
+            }
+
+            let tm = new TuringMachine(memory, null, 1);
+            
+            memory = tm.getResult();
+
+            for (let i = 0; i < memory.length; i++) {
+                let memBlock = document.createElement("div");
+                memBlock.className = "memory-block";
+                memBlock.innerText = memory[i];
+                memoryContainer.appendChild(memBlock);
+            }
+            return false;
+        };
+
+
+        let runButton = document.querySelector("button.run-button");
+        runButton.onclick = function () {
+            runTuringMachine();
+            return false;
+        };
+
+        function runTuringMachine() {
+            let lines = document.getElementsByClassName("transition-line");
+            let transitions = [];
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                let state0 = line.querySelector(".state0").value;
+                let char0 = line.querySelector(".char0").value;
+                let state1 = line.querySelector(".state1").value;
+                let char1 = line.querySelector(".char1").value;
+                let direction1 = line.querySelector(".direction1").value;
+
+                transitions.push({
+                    State0: state0,
+                    Char0: char0,
+                    State1: state1,
+                    Char1: char1,
+                    Direction1: direction1
+                });
+            }
+
+            let memory = document.querySelector(".memory-input").value.split(",");
+            let memoryContainer = document.querySelector(".memory-block-container");
+            let oldBlocks = memoryContainer.querySelectorAll(".memory-block");
+            for (let i = 0; i < oldBlocks.length; i++) {
+                memoryContainer.removeChild(oldBlocks[i]);
+            }
+
+            let tm = new TuringMachine(memory, transitions, 1);
+            
+
+            tm.work();
+            memory = tm.getResult();
+
+            for (let i = 0; i < memory.length; i++) {
+                let memBlock = document.createElement("div");
+                memBlock.className = "memory-block";
+                memBlock.innerText = memory[i];
+                memoryContainer.appendChild(memBlock);
+            }
+            
+        }
+
+        class TuringMachine{
+            constructor(memory, transitions, initialState){
+                this.memory = [];
+                this.memory.push("*");
+                for(let i = 0; i < memory.length; i++){
+                    this.memory.push(memory[i]);
+                }
+                this.memory.push("*");
+
+                this.transitions = transitions;
+                this.initialState = initialState;
+                this.currentState = this.initialState;
+                this.currentIndex = 1;
+            }
+
+            _readByte(index){
+                if(index < 1 || index >= this.memory.length)
+                {
+                    return '*';//lambda
+                }
+                return this.memory[index];
+            }
+
+            _writeByte(index, byte){
+                if (index < 1 || index >= this.memory.length)
+                {
+                    return;
+                }
+                this.memory[index] = byte;
+            }
+
+            work(){
+                this.currentState = this.initialState;
+                this.currentIndex = 1;
+                while (true)
+                {
+                    if (this.currentState == -1)//Final state
+                    {
+                        return;
+                    }
+
+                    let ch = this._readByte(this.currentIndex);
+                    for(let i = 0; i < this.transitions.length; i++)
+                    {
+                        let transition = this.transitions[i];
+                        if (transition.State0 == this.currentState && transition.Char0 == ch)
+                        {
+                            this.currentState = transition.State1;
+                            this._writeByte(this.currentIndex, transition.Char1);
+                            switch (transition.Direction1)
+                            {
+                                case 'L': this.currentIndex--; break;
+                                case 'R': this.currentIndex++; break;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            getResult(){
+                return this.memory;
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
