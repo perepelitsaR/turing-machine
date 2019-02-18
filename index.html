@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Машина Перепелицы</title>
+    <title>Машина ТПК</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body{
@@ -51,11 +51,11 @@
             text-align: center;
         }
         .manipulator{
-	        width: 0;
-	        height: 0;
-	        border-left: 12px solid transparent;
-	        border-right: 12px solid transparent;
-	        border-top: 24px solid green;
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 24px solid green;
 
             position: absolute;
             top: -24px;
@@ -70,258 +70,58 @@
 </head>
 
 <body>
-    <div class="container">
-        <h1>Welcome to Turing Machine Simulator!</h1>
-        <pre>Command format: Q q0 Char c0 -> Q q1 Char c1 Direction d where q0,q1 - number of state;
+<div class="container">
+    <h1>Welcome to Turing Machine Simulator!</h1>
+    <pre>Command format: Q q0 Char c0 -> Q q1 Char c1 Direction d where q0,q1 - number of state;
 		c0 - input character, c1 - output character, d={L,R,S} Q = {0,1,*}</pre>
-        <p>Initial state number is 1, finish state -1</p>
-        <form class="command-form" action="#">
-            <div class="transition-line">
-                <span>Q</span>
-                <input name="state0" class="transition-input state0" type="text" maxlength="3" />
-                <span>Char</span>
-                <input name="char0" class="transition-input char0" type="text" maxlength="1" />
-                <span>-></span>
-                <span>Q</span>
-                <input name="state1" class="transition-input state1" type="text" maxlength="3" />
-                <span>Char</span>
-                <input name="char1" class="transition-input char1" type="text" maxlength="1" />
-                <span>Direction</span>
-                <input name="direction1" class="transition-input direction1" type="text" maxlength="1" />
-            </div>
-            <button class="button add-button" id="b1">Add line</button>
-			<button class="button add-button" id="b2">Remove lines</button>
-            <p>Memory: </p> <textarea class="memory-input" placeholder="1,0,1,1"></textarea>
-            <br />
-            <button class="button run-button">Run</button>
-            <button class="button load-button">Load</button>
-        </form>
-
-        <div class="turing-memory">
-            
-            <div class="manipulator">
-                <div class="manipulator-state">
-                    5
-                </div>
-            </div>
-            <div class="memory-block-container">
-                <div class="memory-block">
-                    1
-                </div>
-                <div class="memory-block">
-                    0
-                </div>
-                <div class="memory-block">
-                    1
-                </div>
-            </div>
-
+    <p>Initial state number is 1, finish state -1</p>
+    <form class="command-form" action="#">
+        <div class="transition-line">
+            <span>Q</span>
+            <input name="state0" class="transition-input state0" type="text" maxlength="3" />
+            <span>Char</span>
+            <input name="char0" class="transition-input char0" type="text" maxlength="1" />
+            <span>-></span>
+            <span>Q</span>
+            <input name="state1" class="transition-input state1" type="text" maxlength="3" />
+            <span>Char</span>
+            <input name="char1" class="transition-input char1" type="text" maxlength="1" />
+            <span>Direction</span>
+            <input name="direction1" class="transition-input direction1" type="text" maxlength="1" />
         </div>
+        <button class="button add-button" id="b1">Add line</button>
+        <button class="button add-button" id="b2">Remove lines</button>
+        <p>Memory: </p> <textarea class="memory-input" placeholder="1,0,1,1"></textarea>
+        <br />
+        <button class="button run-button">Run</button>
+        <button class="button load-button">Load</button>
+    </form>
+
+    <div class="turing-memory">
+
+        <div class="manipulator">
+            <div class="manipulator-state">
+                5
+            </div>
+        </div>
+        <div class="memory-block-container">
+            <div class="memory-block">
+                1
+            </div>
+            <div class="memory-block">
+                0
+            </div>
+            <div class="memory-block">
+                1
+            </div>
+        </div>
+
     </div>
+</div>
 
-    <script>
-        "use strict;"
-
-        var addButton = document.getElementById("b1") //добавление строки
-        addButton.onclick = function () {
-            var transitionLines = document.querySelectorAll(".transition-line");
-            var lastTransitionLine = transitionLines[transitionLines.length - 1];
-            var transitionCopy =lastTransitionLine.cloneNode(true);
-            var inputs = transitionCopy.querySelectorAll(".transition-input");
-            inputs.forEach(element => {
-                element.value = '';
-            });
-            var parent = document.querySelector(".command-form");
-            var nextChild = parent.querySelector(".addButton");
-            parent.insertBefore(transitionCopy, lastTransitionLine.nextSibling);
-            return false;
-        }
-		var removeButton = addButton = document.getElementById("b2"); //удаление строки
-		removeButton.onclick = function () { 
-            var transitionLines = document.querySelectorAll(".transition-line");
-            var lastTransitionLine = transitionLines[transitionLines.length - 1];
-            var transitionCopy =lastTransitionLine.cloneNode(true);
-            var inputs = transitionCopy.querySelectorAll(".transition-input");
-            inputs.forEach(element => {
-                element.value = '';
-            });
-            var parent = document.querySelector(".command-form");
-            var nextChild = parent.querySelector(".addButton");
-            parent.deleteBefore(transitionCopy, lastTransitionLine.nextSibling);
-            return false;
-        }
-
-        var loadButton = document.querySelector("button.load-button");
-        loadButton.onclick = function () {
-            var memory = document.querySelector(".memory-input").value.split(",");
-            var memoryContainer = document.querySelector(".memory-block-container");
-            var oldBlocks = memoryContainer.querySelectorAll(".memory-block");
-            for (var i = 0; i < oldBlocks.length; i++) {
-                memoryContainer.removeChild(oldBlocks[i]);
-            }
-
-            var tm = new TuringMachine(memory, null, 1);
-            
-            memory = tm.getResult();
-
-            for (var i = 0; i < memory.length; i++) {
-                var memBlock = document.createElement("div");
-                memBlock.className = "memory-block";
-                memBlock.innerText = memory[i];
-                memoryContainer.appendChild(memBlock);
-            }
-            return false;
-        }
-
-
-        function TuringMachine(memory, transitions, initialState){
-            this.memory = [];
-            this.memory.push("*");
-            for(var i = 0; i < memory.length; i++){
-                this.memory.push(memory[i]);
-            }
-            this.memory.push("*");
-
-            this.transitions = transitions;
-            this.initialState = initialState;
-            this.currentState = this.initialState;
-            this.currentIndex = 1;
-        }
-
-        TuringMachine.prototype._readByte = function(index){
-            if(index < 1 || index >= this.memory.length)
-            {
-                return '*';//lambda
-            }
-            return this.memory[index];
-        }
-
-        TuringMachine.prototype._writeByte = function(index, byte){
-            if (index < 1 || index >= this.memory.length)
-            {
-                return;
-            }
-            this.memory[index] = byte;
-        }
-
-        TuringMachine.prototype.work = function(){
-            this.currentState = this.initialState;
-            this.currentIndex = 1;
-            while (true)
-            {
-                if (this.currentState == -1)//Final state
-                {
-                    return;
-                }
-
-                var ch = this._readByte(this.currentIndex);
-                for(var i = 0; i < this.transitions.length; i++)
-                {
-                    var transition = this.transitions[i];
-                    if (transition.State0 == this.currentState && transition.Char0 == ch)
-                    {
-                        this.currentState = transition.State1;
-                        this._writeByte(this.currentIndex, transition.Char1);
-                        switch (transition.Direction1)
-                        {
-                            case 'L': this.currentIndex--; break;
-                            case 'R': this.currentIndex++; break;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        TuringMachine.prototype.getResult = function(){
-            // var res = [];
-            // var i = 0;
-            // var ch = this._readByte(i);
-            // while(ch != '*')
-            // {
-            //     res.push(ch);
-            //     i++;
-            //     ch = this._readByte(i);
-            // }
-            // res.push('*');
-
-            return this.memory;
-        }
-
-
-        var runButton = document.querySelector("button.run-button");
-        runButton.onclick = function () {
-            if (document.querySelector(".memory-input").value === undefined) {
-                if(!confirm("Empty memory. Proceed?"))
-                    alert("INPUT ERROR! check your input!!!");
-                else{
-                    var now = new Date();
-                    runTuringMachine();
-                    var fut = new Date();
-                }
-            } else {
-                runTuringMachine();
-            }
-            return false;
-        }
-
-        function runTuringMachine() {
-            for (var i = 0; i < oldBlocks.length; i++) {
-                memoryContainer.removeChild(oldBlocks[i]);
-                if (fut - now > 5000){
-                    alert("ERROR! renew the page!!!");
-                    break;
-                }
-            }
-            var lines = document.getElementsByClassName("transition-line");
-            var transitions = []
-            for (var i = 0; i < lines.length; i++) {
-                if (fut - now > 5000){
-                    alert("ERROR! renew the page!!!");
-                    break;
-                }
-                var line = lines[i];
-                var state0 = line.querySelector(".state0").value;
-                var char0 = line.querySelector(".char0").value;
-                var state1 = line.querySelector(".state1").value;
-                var char1 = line.querySelector(".char1").value;
-                var direction1 = line.querySelector(".direction1").value;
-
-                transitions.push({
-                    State0: state0,
-                    Char0: char0,
-                    State1: state1,
-                    Char1: char1,
-                    Direction1: direction1
-                });
-            }
-
-            var memory = document.querySelector(".memory-input").value.split(",");
-            var memoryContainer = document.querySelector(".memory-block-container");
-            var oldBlocks = memoryContainer.querySelectorAll(".memory-block");
-
-
-            var tm = new TuringMachine(memory, transitions, 1);
-            
-
-            tm.work();
-            memory = tm.getResult();
-
-            for (var i = 0; i < memory.length; i++) {
-                if (fut - now > 5000){
-                    alert("ERROR! renew the page!!!");
-                    break;
-                }
-                var memBlock = document.createElement("div");
-                memBlock.className = "memory-block";
-                memBlock.innerText = memory[i];
-                memoryContainer.appendChild(memBlock);
-            }
-            
-        }
-
-
-    </script>
+<script src="js/TuringMachine.js">
+</script>
+<script src="js/MainScript.js"></script>
 </body>
 
 </html>
