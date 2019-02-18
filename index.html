@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Page Title</title>
+    <title>Машина Перепелицы</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body{
@@ -72,7 +72,8 @@
 <body>
     <div class="container">
         <h1>Welcome to Turing Machine Simulator!</h1>
-        <p>Command format: Q q0 Char c0 -> Q q1 Char c1 Direction d where q0,q1 - number of state; c0 - input character, c1 - output character, d={L,R,S}</p>
+        <pre>Command format: Q q0 Char c0 -> Q q1 Char c1 Direction d where q0,q1 - number of state;
+		c0 - input character, c1 - output character, d={L,R,S} Q = {0,1,*}</pre>
         <p>Initial state number is 1, finish state -1</p>
         <form class="command-form" action="#">
             <div class="transition-line">
@@ -88,7 +89,8 @@
                 <span>Direction</span>
                 <input name="direction1" class="transition-input direction1" type="text" maxlength="1" />
             </div>
-            <button class="button add-button">Add line</button>
+            <button class="button add-button" id="b1">Add line</button>
+			<button class="button add-button" id="b2">Remove lines</button>
             <p>Memory: </p> <textarea class="memory-input" placeholder="1,0,1,1"></textarea>
             <br />
             <button class="button run-button">Run</button>
@@ -120,60 +122,170 @@
     <script>
         "use strict;"
 
-        let addButton = document.querySelector("button.add-button");
+        var addButton = document.getElementById("b1") //добавление строки
         addButton.onclick = function () {
-            let transitionLines = document.querySelectorAll(".transition-line");
-            let lastTransitionLine = transitionLines[transitionLines.length - 1];
-            let transitionCopy =lastTransitionLine.cloneNode(true);
-            let inputs = transitionCopy.querySelectorAll(".transition-input");
-            inputs.forEach((element) => {
+            var transitionLines = document.querySelectorAll(".transition-line");
+            var lastTransitionLine = transitionLines[transitionLines.length - 1];
+            var transitionCopy =lastTransitionLine.cloneNode(true);
+            var inputs = transitionCopy.querySelectorAll(".transition-input");
+            inputs.forEach(element => {
                 element.value = '';
             });
-            let parent = document.querySelector(".command-form");
-            let nextChild = parent.querySelector(".addButton");
+            var parent = document.querySelector(".command-form");
+            var nextChild = parent.querySelector(".addButton");
             parent.insertBefore(transitionCopy, lastTransitionLine.nextSibling);
             return false;
-        };
+        }
+		var removeButton = addButton = document.getElementById("b2"); //удаление строки
+		removeButton.onclick = function () { 
+            var transitionLines = document.querySelectorAll(".transition-line");
+            var lastTransitionLine = transitionLines[transitionLines.length - 1];
+            var transitionCopy =lastTransitionLine.cloneNode(true);
+            var inputs = transitionCopy.querySelectorAll(".transition-input");
+            inputs.forEach(element => {
+                element.value = '';
+            });
+            var parent = document.querySelector(".command-form");
+            var nextChild = parent.querySelector(".addButton");
+            parent.deleteBefore(transitionCopy, lastTransitionLine.nextSibling);
+            return false;
+        }
 
-        let loadButton = document.querySelector("button.load-button");
+        var loadButton = document.querySelector("button.load-button");
         loadButton.onclick = function () {
-            let memory = document.querySelector(".memory-input").value.split(",");
-            let memoryContainer = document.querySelector(".memory-block-container");
-            let oldBlocks = memoryContainer.querySelectorAll(".memory-block");
-            for (let i = 0; i < oldBlocks.length; i++) {
+            var memory = document.querySelector(".memory-input").value.split(",");
+            var memoryContainer = document.querySelector(".memory-block-container");
+            var oldBlocks = memoryContainer.querySelectorAll(".memory-block");
+            for (var i = 0; i < oldBlocks.length; i++) {
                 memoryContainer.removeChild(oldBlocks[i]);
             }
 
-            let tm = new TuringMachine(memory, null, 1);
+            var tm = new TuringMachine(memory, null, 1);
             
             memory = tm.getResult();
 
-            for (let i = 0; i < memory.length; i++) {
-                let memBlock = document.createElement("div");
+            for (var i = 0; i < memory.length; i++) {
+                var memBlock = document.createElement("div");
                 memBlock.className = "memory-block";
                 memBlock.innerText = memory[i];
                 memoryContainer.appendChild(memBlock);
             }
             return false;
-        };
+        }
 
 
-        let runButton = document.querySelector("button.run-button");
+        function TuringMachine(memory, transitions, initialState){
+            this.memory = [];
+            this.memory.push("*");
+            for(var i = 0; i < memory.length; i++){
+                this.memory.push(memory[i]);
+            }
+            this.memory.push("*");
+
+            this.transitions = transitions;
+            this.initialState = initialState;
+            this.currentState = this.initialState;
+            this.currentIndex = 1;
+        }
+
+        TuringMachine.prototype._readByte = function(index){
+            if(index < 1 || index >= this.memory.length)
+            {
+                return '*';//lambda
+            }
+            return this.memory[index];
+        }
+
+        TuringMachine.prototype._writeByte = function(index, byte){
+            if (index < 1 || index >= this.memory.length)
+            {
+                return;
+            }
+            this.memory[index] = byte;
+        }
+
+        TuringMachine.prototype.work = function(){
+            this.currentState = this.initialState;
+            this.currentIndex = 1;
+            while (true)
+            {
+                if (this.currentState == -1)//Final state
+                {
+                    return;
+                }
+
+                var ch = this._readByte(this.currentIndex);
+                for(var i = 0; i < this.transitions.length; i++)
+                {
+                    var transition = this.transitions[i];
+                    if (transition.State0 == this.currentState && transition.Char0 == ch)
+                    {
+                        this.currentState = transition.State1;
+                        this._writeByte(this.currentIndex, transition.Char1);
+                        switch (transition.Direction1)
+                        {
+                            case 'L': this.currentIndex--; break;
+                            case 'R': this.currentIndex++; break;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        TuringMachine.prototype.getResult = function(){
+            // var res = [];
+            // var i = 0;
+            // var ch = this._readByte(i);
+            // while(ch != '*')
+            // {
+            //     res.push(ch);
+            //     i++;
+            //     ch = this._readByte(i);
+            // }
+            // res.push('*');
+
+            return this.memory;
+        }
+
+
+        var runButton = document.querySelector("button.run-button");
         runButton.onclick = function () {
-            runTuringMachine();
+            if (document.querySelector(".memory-input").value === undefined) {
+                if(!confirm("Empty memory. Proceed?"))
+                    alert("INPUT ERROR! check your input!!!");
+                else{
+                    var now = new Date();
+                    runTuringMachine();
+                    var fut = new Date();
+                }
+            } else {
+                runTuringMachine();
+            }
             return false;
-        };
+        }
 
         function runTuringMachine() {
-            let lines = document.getElementsByClassName("transition-line");
-            let transitions = [];
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i];
-                let state0 = line.querySelector(".state0").value;
-                let char0 = line.querySelector(".char0").value;
-                let state1 = line.querySelector(".state1").value;
-                let char1 = line.querySelector(".char1").value;
-                let direction1 = line.querySelector(".direction1").value;
+            for (var i = 0; i < oldBlocks.length; i++) {
+                memoryContainer.removeChild(oldBlocks[i]);
+                if (fut - now > 5000){
+                    alert("ERROR! renew the page!!!");
+                    break;
+                }
+            }
+            var lines = document.getElementsByClassName("transition-line");
+            var transitions = []
+            for (var i = 0; i < lines.length; i++) {
+                if (fut - now > 5000){
+                    alert("ERROR! renew the page!!!");
+                    break;
+                }
+                var line = lines[i];
+                var state0 = line.querySelector(".state0").value;
+                var char0 = line.querySelector(".char0").value;
+                var state1 = line.querySelector(".state1").value;
+                var char1 = line.querySelector(".char1").value;
+                var direction1 = line.querySelector(".direction1").value;
 
                 transitions.push({
                     State0: state0,
@@ -184,91 +296,28 @@
                 });
             }
 
-            let memory = document.querySelector(".memory-input").value.split(",");
-            let memoryContainer = document.querySelector(".memory-block-container");
-            let oldBlocks = memoryContainer.querySelectorAll(".memory-block");
-            for (let i = 0; i < oldBlocks.length; i++) {
-                memoryContainer.removeChild(oldBlocks[i]);
-            }
+            var memory = document.querySelector(".memory-input").value.split(",");
+            var memoryContainer = document.querySelector(".memory-block-container");
+            var oldBlocks = memoryContainer.querySelectorAll(".memory-block");
 
-            let tm = new TuringMachine(memory, transitions, 1);
+
+            var tm = new TuringMachine(memory, transitions, 1);
             
 
             tm.work();
             memory = tm.getResult();
 
-            for (let i = 0; i < memory.length; i++) {
-                let memBlock = document.createElement("div");
+            for (var i = 0; i < memory.length; i++) {
+                if (fut - now > 5000){
+                    alert("ERROR! renew the page!!!");
+                    break;
+                }
+                var memBlock = document.createElement("div");
                 memBlock.className = "memory-block";
                 memBlock.innerText = memory[i];
                 memoryContainer.appendChild(memBlock);
             }
             
-        }
-
-        class TuringMachine{
-            constructor(memory, transitions, initialState){
-                this.memory = [];
-                this.memory.push("*");
-                for(let i = 0; i < memory.length; i++){
-                    this.memory.push(memory[i]);
-                }
-                this.memory.push("*");
-
-                this.transitions = transitions;
-                this.initialState = initialState;
-                this.currentState = this.initialState;
-                this.currentIndex = 1;
-            }
-
-            _readByte(index){
-                if(index < 1 || index >= this.memory.length)
-                {
-                    return '*';//lambda
-                }
-                return this.memory[index];
-            }
-
-            _writeByte(index, byte){
-                if (index < 1 || index >= this.memory.length)
-                {
-                    return;
-                }
-                this.memory[index] = byte;
-            }
-
-            work(){
-                this.currentState = this.initialState;
-                this.currentIndex = 1;
-                while (true)
-                {
-                    if (this.currentState == -1)//Final state
-                    {
-                        return;
-                    }
-
-                    let ch = this._readByte(this.currentIndex);
-                    for(let i = 0; i < this.transitions.length; i++)
-                    {
-                        let transition = this.transitions[i];
-                        if (transition.State0 == this.currentState && transition.Char0 == ch)
-                        {
-                            this.currentState = transition.State1;
-                            this._writeByte(this.currentIndex, transition.Char1);
-                            switch (transition.Direction1)
-                            {
-                                case 'L': this.currentIndex--; break;
-                                case 'R': this.currentIndex++; break;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-
-            getResult(){
-                return this.memory;
-            }
         }
 
 
