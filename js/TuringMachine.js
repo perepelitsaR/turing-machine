@@ -54,7 +54,7 @@ class TuringMachine{
         let elapsed = new Date() - start;
         while (elapsed < timeLimit)
         {
-            if (this.currentState === -1)//Final state
+            if (this.currentState == -1)//Final state
             {
                 return;
             }
@@ -63,7 +63,7 @@ class TuringMachine{
             for(let i = 0; i < this.transitions.length; i++)
             {
                 let transition = this.transitions[i];
-                if (transition.State0 === this.currentState && transition.Char0 === ch)
+                if (transition.State0 == this.currentState && transition.Char0 == ch)
                 {
                     this.currentState = transition.State1;
                     this._writeByte(this.currentIndex, transition.Char1);
